@@ -7,6 +7,10 @@ edition = "2021"
 
 [dependencies]
 actix-web = "4"
-postgres = {version = "0.19.2"}
+tokio-postgres = "0.7.5"
 serde = { version = "1.0", features = ["derive"] }
 live-reload = "0.2"
+dotenv = "0.15.0"
+validator =  { version = "0.14.0", features = ["derive"] }
+tokio = "1.17.0"
+
