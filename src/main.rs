@@ -22,7 +22,7 @@ async fn main() -> std::io::Result<()> {
         panic!("{}", err);
     }
 
-    HttpServer::new(|| App::new().service(web::scope("/auth").service(signin)))
+    HttpServer::new(|| App::new().service(web::scope("/auth").service(signin).service(signup)))
         .bind(("127.0.0.1", port))?
         .run()
         .await

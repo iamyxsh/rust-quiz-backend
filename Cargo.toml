@@ -13,4 +13,8 @@ live-reload = "0.2"
 dotenv = "0.15.0"
 validator =  { version = "0.14.0", features = ["derive"] }
 tokio = "1.17.0"
+postgres-types = { version = "0.2.2", features = ["derive"] }
+jsonwebtoken = "8"
+chrono = "0.4"
+pwhash = "1"
 

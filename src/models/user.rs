@@ -1,13 +1,25 @@
 use crate::utils::database::{self, USER_TABLE_NAME};
+use postgres_types::FromSql;
 use serde::{Deserialize, Serialize};
-use tokio_postgres::Error;
+use tokio_postgres::{types::ToSql, Error, Row};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSql, FromSql)]
 pub struct User {
-    pub id: Option<u32>,
+    pub id: Option<i32>,
     pub name: Option<String>,
     pub email: String,
     pub password: String,
+}
+
+impl From<Row> for User {
+    fn from(row: Row) -> Self {
+        Self {
+            id: Some(row.get(0)),
+            name: row.get(1),
+            email: row.get(2),
+            password: row.get(3),
+        }
+    }
 }
 
 impl User {
@@ -24,19 +36,21 @@ impl User {
             )
             .await
     }
+
     pub async fn get_user(&mut self, col: String, val: String) -> Result<(), Error> {
-        println!("{} {}", col, val);
         let client = database::return_client().await;
         let row = client
             .query(
-                &format!("SELECT id, name, email, password FROM {}", USER_TABLE_NAME),
+                &format!(
+                    "SELECT id, name, email, password FROM {} WHERE {} = '{}'",
+                    USER_TABLE_NAME, col, val
+                ),
                 &[],
             )
             .await;
 
         match row {
             Ok(r) => {
-                println!("{:#?}", r);
                 if r.len() > 0 {
                     self.id = Some(r[0].get(0));
                     self.name = r[0].get(1);

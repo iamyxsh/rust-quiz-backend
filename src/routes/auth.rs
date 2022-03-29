@@ -5,17 +5,22 @@ use validator::Validate;
 use crate::{
     models::user::User,
     routes::{error_bodies::ErrorResponse, request_bodies},
+    utils::{
+        hashing::{gen_hash, verify_hash},
+        jwt::gen_token,
+    },
 };
 
 #[derive(Debug, Deserialize, Serialize)]
-struct CreateUserRes {
+struct SignUpRes {
     status: bool,
     payload: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-struct GetUser {
-    user: User,
+struct SignInRes {
+    status: bool,
+    payload: String,
 }
 
 #[post("/signup")]
@@ -32,15 +37,16 @@ async fn signup(body: web::Json<request_bodies::SignupBody>) -> HttpResponse {
             message: err_string,
         })
     } else {
+        let password_hash = gen_hash(body.password.to_string()).unwrap();
         let user = User {
             id: None,
             email: body.email.to_string(),
             name: Some(body.name.to_string()),
-            password: body.password.to_string(),
+            password: password_hash,
         };
         let result = user.insert_user().await;
         match result {
-            Ok(_) => HttpResponse::Created().json(CreateUserRes {
+            Ok(_) => HttpResponse::Created().json(SignUpRes {
                 status: true,
                 payload: "User Created".to_string(),
             }),
@@ -79,7 +85,24 @@ async fn signin(body: web::Json<request_bodies::SigninBody>) -> HttpResponse {
         match tx {
             Ok(_) => {
                 if user.id.is_some() {
-                    HttpResponse::Ok().json(GetUser { user: user })
+                    if verify_hash(user.password, body.password.to_string()) {
+                        let token = gen_token(format!("{}", user.id.unwrap()));
+                        match token {
+                            Ok(token) => HttpResponse::Ok().json(SignInRes {
+                                status: true,
+                                payload: token,
+                            }),
+                            Err(e) => HttpResponse::Ok().json(ErrorResponse {
+                                status: false,
+                                message: e.to_string(),
+                            }),
+                        }
+                    } else {
+                        HttpResponse::NotFound().json(ErrorResponse {
+                            status: false,
+                            message: "User Not Found.".to_string(),
+                        })
+                    }
                 } else {
                     HttpResponse::NotFound().body("false")
                 }

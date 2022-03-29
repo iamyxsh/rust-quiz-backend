@@ -8,10 +8,10 @@ pub async fn db_init() -> (u64, String) {
 
 async fn create_user_table() -> (u64, String) {
     let columns = vec![
-        "id  SERIAL PRIMARY KEY".to_string(),
-        "name  VARCHAR NOT NULL".to_string(),
-        "email  VARCHAR NOT NULL".to_string(),
-        "password TEXT NOT NULL".to_string(),
+        "id         SERIAL PRIMARY KEY".to_string(),
+        "name       VARCHAR NOT NULL".to_string(),
+        "email      VARCHAR NOT NULL".to_string(),
+        "password   TEXT NOT NULL".to_string(),
     ];
     create_table(USER_TABLE_NAME.to_string(), columns).await
 }
